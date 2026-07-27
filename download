@@ -1,0 +1,52 @@
+# Carmi Store
+
+A storefront for 3D-printed products, with a cart, checkout, order emails (via EmailJS),
+and an admin order queue backed by Firestore in real time.
+
+## Running locally
+
+```bash
+npm install
+npm run dev
+```
+
+## Important: lock down Firestore before going live
+
+Your Firestore database was created in **test mode**, which means anyone on the
+internet can currently read AND write to it — not just through this site, but
+directly against your Firebase project. Test mode auto-expires after 30 days and
+locks everything down completely (breaking the site), so before then, replace the
+rules with something like this:
+
+1. In the Firebase console, go to **Firestore Database → Rules**
+2. Replace the rules with:
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /orders/{orderId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if true;
+    }
+  }
+}
+```
+
+This keeps the site fully working (anyone can place an order, admin can update/delete),
+while being an explicit rule instead of the open-ended test-mode default. Note that the
+admin passcode in this app (`1212`, set in `src/App.jsx` as `ADMIN_CODE`) is a simple
+front-end gate, not real security — anyone who reads the deployed JavaScript can find it.
+If you want real admin protection later, that requires Firebase Authentication, which is
+a bigger change I can help with when you're ready.
+
+## Deploying to Vercel (free)
+
+1. Push this project to a GitHub repository (create one at github.com/new, then follow
+   its instructions to push this folder).
+2. Go to vercel.com, sign in with GitHub, click **Add New → Project**, and select the repo.
+3. Vercel auto-detects Vite — leave the defaults and click **Deploy**.
+4. After a minute or two you'll get a live URL like `carmi-store.vercel.app`.
+
+Every time you push a change to GitHub, Vercel automatically redeploys.
